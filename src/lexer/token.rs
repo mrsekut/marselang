@@ -20,6 +20,8 @@ pub enum TokenKind {
     Minus,
     Asterisk,
     Slash,
+    Lparen,
+    Rparen,
 }
 
 pub type Token = Annot<TokenKind>;
@@ -43,5 +45,13 @@ impl Token {
 
     pub fn slash(loc: Loc) -> Self {
         Self::new(TokenKind::Slash, loc)
+    }
+
+    pub fn lparen(loc: Loc) -> Self {
+        Self::new(TokenKind::Lparen, loc)
+    }
+
+    pub fn rparen(loc: Loc) -> Self {
+        Self::new(TokenKind::Rparen, loc)
     }
 }
