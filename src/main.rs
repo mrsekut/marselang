@@ -17,7 +17,9 @@ impl<T> Annot<T> {
 enum TokenKind {
     Number(u64),
     Plus,
+    Minus,
     Asterisk,
+    Slash,
 }
 
 type Token = Annot<TokenKind>;
@@ -30,8 +32,16 @@ impl Token {
         Self::new(TokenKind::Plus, loc)
     }
 
+    fn minus(loc: Loc) -> Self {
+        Self::new(TokenKind::Minus, loc)
+    }
+
     fn asterisk(loc: Loc) -> Self {
         Self::new(TokenKind::Asterisk, loc)
+    }
+
+    fn slash(loc: Loc) -> Self {
+        Self::new(TokenKind::Slash, loc)
     }
 }
 
@@ -68,8 +78,16 @@ fn lex(input: &str) -> Result<Vec<Token>, LexError> {
                 tokens.push(Token::plus(Loc(pos, pos + 1)));
                 pos = pos + 1;
             }
+            b'-' => {
+                tokens.push(Token::minus(Loc(pos, pos + 1)));
+                pos = pos + 1;
+            }
             b'*' => {
                 tokens.push(Token::asterisk(Loc(pos, pos + 1)));
+                pos = pos + 1;
+            }
+            b'/' => {
+                tokens.push(Token::slash(Loc(pos, pos + 1)));
                 pos = pos + 1;
             }
             b => return Err(LexError::invalid_char(b as char, Loc(pos, pos + 1))),
@@ -81,20 +99,22 @@ fn lex(input: &str) -> Result<Vec<Token>, LexError> {
 #[test]
 fn test_lex() {
     assert_eq!(
-        lex("12+3*123+3"),
+        lex("12+3-123*3/4"),
         Ok(vec![
             Token::number(12, Loc(0, 2)),
             Token::plus(Loc(2, 3)),
             Token::number(3, Loc(3, 4)),
-            Token::asterisk(Loc(4, 5)),
+            Token::minus(Loc(4, 5)),
             Token::number(123, Loc(5, 8)),
-            Token::plus(Loc(8, 9)),
+            Token::asterisk(Loc(8, 9)),
             Token::number(3, Loc(9, 10)),
+            Token::slash(Loc(10, 11)),
+            Token::number(4, Loc(11, 12)),
         ])
     )
 }
 
 fn main() {
-    let l = lex("12+3*123+3").unwrap();
+    let l = lex("12+3-123/3").unwrap();
     println!("{:?}", l);
 }
