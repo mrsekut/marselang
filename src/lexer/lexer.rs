@@ -41,6 +41,9 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, LexError> {
                 tokens.push(Token::rparen(Loc(pos, pos + 1)));
                 pos = pos + 1;
             }
+            b' ' | b'\n' | b'\t' => {
+                pos = pos + 1;
+            }
             b => return Err(LexError::invalid_char(b as char, Loc(pos, pos + 1))),
         }
     }
@@ -50,19 +53,19 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, LexError> {
 #[test]
 fn test_lex() {
     assert_eq!(
-        lexer("12+(3-123)*3/4"),
+        lexer("12 + (3 - 123) * 3 / 4"),
         Ok(vec![
             Token::number(12, Loc(0, 2)),
-            Token::plus(Loc(2, 3)),
-            Token::lparen(Loc(3, 4)),
-            Token::number(3, Loc(4, 5)),
-            Token::minus(Loc(5, 6)),
-            Token::number(123, Loc(6, 9)),
-            Token::rparen(Loc(9, 10)),
-            Token::asterisk(Loc(10, 11)),
-            Token::number(3, Loc(11, 12)),
-            Token::slash(Loc(12, 13)),
-            Token::number(4, Loc(13, 14)),
+            Token::plus(Loc(3, 4)),
+            Token::lparen(Loc(5, 6)),
+            Token::number(3, Loc(6, 7)),
+            Token::minus(Loc(8, 9)),
+            Token::number(123, Loc(10, 13)),
+            Token::rparen(Loc(13, 14)),
+            Token::asterisk(Loc(15, 16)),
+            Token::number(3, Loc(17, 18)),
+            Token::slash(Loc(19, 20)),
+            Token::number(4, Loc(21, 22)),
         ])
     )
 }
