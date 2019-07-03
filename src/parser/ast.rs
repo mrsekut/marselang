@@ -1,4 +1,6 @@
-use crate::lexer::{Annot, Loc};
+use crate::error::Error;
+use crate::lexer::{lexer, Annot, Loc};
+use crate::parser::parser;
 
 #[derive(Debug, PartialEq)]
 pub enum UniOpKind {
@@ -76,5 +78,15 @@ impl Ast {
             },
             loc,
         )
+    }
+}
+
+use std::str::FromStr;
+impl FromStr for Ast {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let tokens = lexer(s)?;
+        let ast = parser(tokens)?;
+        Ok(ast)
     }
 }

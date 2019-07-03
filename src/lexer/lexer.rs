@@ -1,7 +1,6 @@
-use crate::lexer::error::LexError;
-use crate::lexer::token::{Loc, Token};
+use crate::lexer::{LexerError, Loc, Token};
 
-pub fn lexer(input: &str) -> Result<Vec<Token>, LexError> {
+pub fn lexer(input: &str) -> Result<Vec<Token>, LexerError> {
     let mut tokens = Vec::new();
     let input = input.as_bytes();
     let mut pos = 0;
@@ -44,7 +43,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, LexError> {
             b' ' | b'\n' | b'\t' => {
                 pos = pos + 1;
             }
-            b => return Err(LexError::invalid_char(b as char, Loc(pos, pos + 1))),
+            b => return Err(LexerError::invalid_char(b as char, Loc(pos, pos + 1))),
         }
     }
     Ok(tokens)

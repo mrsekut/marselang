@@ -1,20 +1,13 @@
-use crate::lexer::{Loc, Token, TokenKind};
+use crate::lexer::{Token, TokenKind};
 use crate::parser::ast::{Ast, BinOp};
+use crate::parser::error::ParserError;
 use std::iter::Peekable;
 
-#[derive(Debug, PartialEq)]
-pub enum ParseError {
-    RedundantExpression(Token),
-    UnclosedOpenParen(Token),
-    NotExpression(Token),
-    Eof,
-}
-
-pub fn parser(tokens: Vec<Token>) -> Result<Ast, ParseError> {
+pub fn parser(tokens: Vec<Token>) -> Result<Ast, ParserError> {
     let mut tokens = tokens.into_iter().peekable();
     let ast = parse_expr(&mut tokens)?;
     match tokens.next() {
-        Some(tok) => Err(ParseError::RedundantExpression(tok)),
+        Some(tok) => Err(ParserError::RedundantExpression(tok)),
         None => Ok(ast),
     }
 }
@@ -23,7 +16,7 @@ pub fn parser(tokens: Vec<Token>) -> Result<Ast, ParseError> {
 // expr ::= ("+" | "-") expr_loop | ε
 fn parse_expr<Tokens: Iterator<Item = Token>>(
     tokens: &mut Peekable<Tokens>,
-) -> Result<Ast, ParseError> {
+) -> Result<Ast, ParserError> {
     let mut lhs = parse_term(tokens)?;
     loop {
         match tokens.peek().map(|tok| tok.value) {
@@ -52,7 +45,7 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
 // term ::= ("*" | "/") factor term_loop | ε
 fn parse_term<Tokens: Iterator<Item = Token>>(
     tokens: &mut Peekable<Tokens>,
-) -> Result<Ast, ParseError> {
+) -> Result<Ast, ParserError> {
     let mut lhs = parse_factor(tokens)?;
     loop {
         match tokens.peek().map(|tok| tok.value) {
@@ -80,10 +73,10 @@ fn parse_term<Tokens: Iterator<Item = Token>>(
 // factor ::= nat | "(" expr ")"
 fn parse_factor<Tokens: Iterator<Item = Token>>(
     tokens: &mut Peekable<Tokens>,
-) -> Result<Ast, ParseError> {
+) -> Result<Ast, ParserError> {
     tokens
         .next()
-        .ok_or(ParseError::Eof)
+        .ok_or(ParserError::Eof)
         .and_then(|tok| match tok.value {
             TokenKind::Number(n) => Ok(Ast::num(n, tok.loc)),
             TokenKind::Lparen => {
@@ -93,16 +86,18 @@ fn parse_factor<Tokens: Iterator<Item = Token>>(
                         value: TokenKind::Rparen,
                         ..
                     }) => Ok(e),
-                    Some(t) => Err(ParseError::RedundantExpression(t)),
-                    _ => Err(ParseError::UnclosedOpenParen(tok)),
+                    Some(t) => Err(ParserError::RedundantExpression(t)),
+                    _ => Err(ParserError::UnclosedOpenParen(tok)),
                 }
             }
-            _ => Err(ParseError::NotExpression(tok)),
+            _ => Err(ParserError::NotExpression(tok)),
         })
 }
 
 #[test]
 fn test_parser() {
+    use crate::lexer::{Loc, Token};
+
     // "12 + (3 - 123) * 3 / 4",
     let ast = parser(vec![
         Token::number(12, Loc(0, 2)),
