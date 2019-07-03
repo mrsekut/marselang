@@ -51,7 +51,7 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, LexError> {
 }
 
 #[test]
-fn test_lex() {
+fn test_lexer() {
     assert_eq!(
         lexer("12 + (3 - 123) * 3 / 4"),
         Ok(vec![

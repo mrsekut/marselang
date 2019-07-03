@@ -27,6 +27,7 @@ impl Interpreter {
     }
 
     fn eval_binop(&mut self, op: &BinOp, lhs: u64, rhs: u64) -> Result<u64, InterpreterErrorKind> {
+        use crate::parser::BinOpKind::*;
         match op.value {
             Add => Ok(lhs + rhs),
             Sub => Ok(lhs - rhs),
