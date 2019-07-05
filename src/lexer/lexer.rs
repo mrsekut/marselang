@@ -4,6 +4,12 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, LexerError> {
     let mut tokens = Vec::new();
     let input = input.as_bytes();
     let mut pos = 0;
+    macro_rules! lex_a_token {
+        ($token_method:ident, $pos:ident) => {{
+            tokens.push(Token::$token_method(Loc(pos, pos + 1)));
+            pos = $pos + 1;
+        }};
+    }
 
     while pos < input.len() {
         match input[pos] {
@@ -16,30 +22,12 @@ pub fn lexer(input: &str) -> Result<Vec<Token>, LexerError> {
                 let n = from_utf8(&input[start..pos]).unwrap().parse().unwrap();
                 tokens.push(Token::number(n, Loc(start, pos)));
             }
-            b'+' => {
-                tokens.push(Token::plus(Loc(pos, pos + 1)));
-                pos = pos + 1;
-            }
-            b'-' => {
-                tokens.push(Token::minus(Loc(pos, pos + 1)));
-                pos = pos + 1;
-            }
-            b'*' => {
-                tokens.push(Token::asterisk(Loc(pos, pos + 1)));
-                pos = pos + 1;
-            }
-            b'/' => {
-                tokens.push(Token::slash(Loc(pos, pos + 1)));
-                pos = pos + 1;
-            }
-            b'(' => {
-                tokens.push(Token::lparen(Loc(pos, pos + 1)));
-                pos = pos + 1;
-            }
-            b')' => {
-                tokens.push(Token::rparen(Loc(pos, pos + 1)));
-                pos = pos + 1;
-            }
+            b'+' => lex_a_token!(plus, pos),
+            b'-' => lex_a_token!(minus, pos),
+            b'*' => lex_a_token!(asterisk, pos),
+            b'/' => lex_a_token!(slash, pos),
+            b'(' => lex_a_token!(lparen, pos),
+            b')' => lex_a_token!(rparen, pos),
             b' ' | b'\n' | b'\t' => {
                 pos = pos + 1;
             }
