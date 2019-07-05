@@ -19,7 +19,7 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
 ) -> Result<Ast, ParserError> {
     let mut lhs = parse_term(tokens)?;
     loop {
-        match tokens.peek().map(|tok| tok.value) {
+        match tokens.peek().map(|tok| tok.value.clone()) {
             Some(TokenKind::Plus) | Some(TokenKind::Minus) => {
                 let op = match tokens.next() {
                     Some(Token {
@@ -48,7 +48,7 @@ fn parse_term<Tokens: Iterator<Item = Token>>(
 ) -> Result<Ast, ParserError> {
     let mut lhs = parse_unary(tokens)?;
     loop {
-        match tokens.peek().map(|tok| tok.value) {
+        match tokens.peek().map(|tok| tok.value.clone()) {
             Some(TokenKind::Asterisk) | Some(TokenKind::Slash) => {
                 let op = match tokens.next() {
                     Some(Token {
@@ -73,7 +73,7 @@ fn parse_term<Tokens: Iterator<Item = Token>>(
 fn parse_unary<Tokens: Iterator<Item = Token>>(
     tokens: &mut Peekable<Tokens>,
 ) -> Result<Ast, ParserError> {
-    match tokens.peek().map(|tok| tok.value) {
+    match tokens.peek().map(|tok| tok.value.clone()) {
         Some(TokenKind::Plus) | Some(TokenKind::Minus) => {
             let op = match tokens.next() {
                 Some(Token {

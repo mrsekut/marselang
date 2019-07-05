@@ -2,15 +2,17 @@ use crate::lexer::Loc;
 use crate::util::Annot;
 use std::fmt;
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
-    Number(u64),
-    Plus,
-    Minus,
-    Asterisk,
-    Slash,
-    Lparen,
-    Rparen,
+    Number(u64), // 0..9
+    Plus,        // +
+    Minus,       // -
+    Asterisk,    // *
+    Slash,       // /
+    Lparen,      // (
+    Rparen,      // )
+    Bind,        // :=
+    Var(String), // hoge
 }
 
 impl fmt::Display for TokenKind {
@@ -24,6 +26,8 @@ impl fmt::Display for TokenKind {
             Slash => write!(f, "/"),
             Lparen => write!(f, "("),
             Rparen => write!(f, ")"),
+            Bind => write!(f, ":="),
+            Var(s) => s.fmt(f),
         }
     }
 }
@@ -57,5 +61,13 @@ impl Token {
 
     pub fn rparen(loc: Loc) -> Self {
         Self::new(TokenKind::Rparen, loc)
+    }
+
+    pub fn bind(loc: Loc) -> Self {
+        Self::new(TokenKind::Bind, loc)
+    }
+
+    pub fn var(s: impl Into<String>, loc: Loc) -> Self {
+        Self::new(TokenKind::Var(s.into()), loc)
     }
 }
