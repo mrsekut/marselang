@@ -1,4 +1,4 @@
-use crate::lexer::{Annot, LexerError, Loc, Token};
+use crate::lexer::{LexerError, Loc, Token};
 use crate::parser::ParserError;
 
 #[derive(Debug, PartialEq)]
@@ -39,7 +39,7 @@ impl StdError for Error {
     }
 }
 
-fn print_annot(input: &str, loc: Loc) {
+pub fn print_annot(input: &str, loc: Loc) {
     eprintln!("{}", input);
     eprintln!("{}{}", " ".repeat(loc.0), "^".repeat(loc.1 - loc.0));
 }
@@ -73,37 +73,5 @@ pub fn show_trace<E: StdError>(e: E) {
     while let Some(e) = source {
         eprintln!("caused by {}", e);
         source = e.source()
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub enum InterpreterErrorKind {
-    DivisionByZero,
-}
-
-pub type InterpreterError = Annot<InterpreterErrorKind>;
-
-impl fmt::Display for InterpreterError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use self::InterpreterErrorKind::*;
-        match self.value {
-            DivisionByZero => write!(f, "division by zero"),
-        }
-    }
-}
-
-impl StdError for InterpreterError {
-    fn description(&self) -> &str {
-        use self::InterpreterErrorKind::*;
-        match self.value {
-            DivisionByZero => "the right hand expression of the division evaluates to zero",
-        }
-    }
-}
-
-impl InterpreterError {
-    pub fn show_diagnostic(&self, input: &str) {
-        eprintln!("{}", self);
-        print_annot(input, self.loc.clone());
     }
 }

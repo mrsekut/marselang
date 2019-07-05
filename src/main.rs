@@ -33,16 +33,16 @@ fn main() {
                     continue;
                 }
             };
-            println!("{:?}", ast);
-        // let n = match interp.eval(&ast) {
-        //     Ok(n) => n,
-        //     Err(e) => {
-        //         e.show_diagnostic(&line);
-        //         error::show_trace(e);
-        //         continue;
-        //     }
-        // };
-        // println!("{}", n);
+            // println!("{:?}", ast);
+            let n = match interp.eval(&ast) {
+                Ok(n) => n,
+                Err(e) => {
+                    e.show_diagnostic(&line);
+                    error::show_trace(e);
+                    continue;
+                }
+            };
+            println!("{}", n);
         } else {
             break;
         }
