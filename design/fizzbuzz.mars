@@ -1,0 +1,15 @@
+fn fizzbuzz n:= Int -> String
+    match mod n
+        15 => "fizzbuzz"
+        3  => "fizz"
+        5  => "buzz"
+        n  => String n
+
+
+fizzbuzz ::= Int -> String
+fizzbuzz := n =>
+    match mod n
+        15 => "fizzbuzz"
+        3  => "fizz"
+        5  => "buzz"
+        n  => String n

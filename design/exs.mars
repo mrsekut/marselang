@@ -1,0 +1,20 @@
+3 + 3
+3 - 2
+3 * 4
+9 / 3
+9 % 3
+3 ^ 2
+
+hoge ::= Int
+hoge := 3
+
+// 無名関数
+mod ::= Int Int -> Int
+mod := x n => x % n
+mod := x => n => x % n
+
+
+
+Int -> Int -> Int
+fn mod x n=>
+    x % n
