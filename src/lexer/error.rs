@@ -1,4 +1,5 @@
-use crate::lexer::token::{Annot, Loc};
+use crate::lexer::Loc;
+use crate::util::Annot;
 
 #[derive(Debug, PartialEq)]
 pub enum LexerErrorKind {

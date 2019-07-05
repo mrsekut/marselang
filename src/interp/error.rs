@@ -1,5 +1,5 @@
 use crate::error::print_annot;
-use crate::lexer::Annot;
+use crate::util::Annot;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum InterpreterErrorKind {

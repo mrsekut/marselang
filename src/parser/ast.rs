@@ -1,6 +1,7 @@
 use crate::error::Error;
-use crate::lexer::{lexer, Annot, Loc};
+use crate::lexer::{lexer, Loc};
 use crate::parser::parser;
+use crate::util::Annot;
 
 #[derive(Debug, PartialEq)]
 pub enum UniOpKind {

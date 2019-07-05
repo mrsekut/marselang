@@ -2,6 +2,7 @@ mod error;
 mod interp;
 mod lexer;
 mod parser;
+mod util;
 use std::io;
 
 fn prompt(s: &str) -> io::Result<()> {
