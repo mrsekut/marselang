@@ -48,8 +48,8 @@ impl fmt::Display for TokenKind {
             Minus => write!(f, "-"),
             Asterisk => write!(f, "*"),
             Slash => write!(f, "/"),
-            LParen => write!(f, "("),
-            RParen => write!(f, ")"),
+            Lparen => write!(f, "("),
+            Rparen => write!(f, ")"),
         }
     }
 }

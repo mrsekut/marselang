@@ -1,5 +1,5 @@
 use crate::lexer::{Token, TokenKind};
-use crate::parser::ast::{Ast, BinOp};
+use crate::parser::ast::{Ast, BinOp, UniOp};
 use crate::parser::error::ParserError;
 use std::iter::Peekable;
 
@@ -41,12 +41,12 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
     }
 }
 
-// term ::= factor term_loop
-// term ::= ("*" | "/") factor term_loop | ε
+// term ::= unnary term_loop
+// term ::= ("*" | "/") unnary term_loop | ε
 fn parse_term<Tokens: Iterator<Item = Token>>(
     tokens: &mut Peekable<Tokens>,
 ) -> Result<Ast, ParserError> {
-    let mut lhs = parse_factor(tokens)?;
+    let mut lhs = parse_unary(tokens)?;
     loop {
         match tokens.peek().map(|tok| tok.value) {
             Some(TokenKind::Asterisk) | Some(TokenKind::Slash) => {
@@ -61,12 +61,36 @@ fn parse_term<Tokens: Iterator<Item = Token>>(
                     }) => BinOp::div(loc),
                     _ => unreachable!(),
                 };
-                let rhs = parse_factor(tokens)?;
+                let rhs = parse_unary(tokens)?;
                 let loc = lhs.loc.merge(&rhs.loc);
                 lhs = Ast::binop(op, lhs, rhs, loc)
             }
             _ => return Ok(lhs),
         }
+    }
+}
+
+fn parse_unary<Tokens: Iterator<Item = Token>>(
+    tokens: &mut Peekable<Tokens>,
+) -> Result<Ast, ParserError> {
+    match tokens.peek().map(|tok| tok.value) {
+        Some(TokenKind::Plus) | Some(TokenKind::Minus) => {
+            let op = match tokens.next() {
+                Some(Token {
+                    value: TokenKind::Plus,
+                    loc,
+                }) => UniOp::plus(loc),
+                Some(Token {
+                    value: TokenKind::Minus,
+                    loc,
+                }) => UniOp::minus(loc),
+                _ => unreachable!(),
+            };
+            let e = parse_factor(tokens)?;
+            let loc = e.loc.merge(&e.loc);
+            Ok(Ast::uniop(op, e, loc))
+        }
+        _ => parse_factor(tokens),
     }
 }
 
@@ -95,7 +119,7 @@ fn parse_factor<Tokens: Iterator<Item = Token>>(
 }
 
 #[test]
-fn test_parser() {
+fn test_binop_parser() {
     use crate::lexer::{Loc, Token};
 
     // "12 + (3 - 123) * 3 / 4",
@@ -136,5 +160,31 @@ fn test_parser() {
             ),
             Loc(0, 22)
         ))
-    )
+    );
+}
+
+#[test]
+fn test_uniop_jparser() {
+    use crate::lexer::{Loc, Token};
+
+    // "-2+(+3)"
+    let ast = parser(vec![
+        Token::minus(Loc(0, 1)),
+        Token::number(2, Loc(1, 2)),
+        Token::plus(Loc(2, 3)),
+        Token::lparen(Loc(3, 4)),
+        Token::plus(Loc(4, 5)),
+        Token::number(3, Loc(5, 6)),
+        Token::rparen(Loc(6, 7)),
+    ]);
+
+    assert_eq!(
+        ast,
+        Ok(Ast::binop(
+            BinOp::add(Loc(2, 3)),
+            Ast::uniop(UniOp::minus(Loc(0, 1)), Ast::num(2, Loc(1, 2)), Loc(1, 2)),
+            Ast::uniop(UniOp::plus(Loc(4, 5)), Ast::num(3, Loc(5, 6)), Loc(5, 6)),
+            Loc(1, 6)
+        ))
+    );
 }

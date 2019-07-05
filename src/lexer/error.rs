@@ -16,11 +16,10 @@ impl LexerError {
 use std::fmt;
 impl fmt::Display for LexerError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        use crate::lexer::LexerErrorKind::InvalidChar;
+        use crate::lexer::LexerErrorKind::*;
         let loc = &self.loc;
         match &self.value {
             InvalidChar(c) => write!(f, "{}: invalid char '{}'", loc, c),
-            Eof => write!(f, "End of file"),
         }
     }
 }
