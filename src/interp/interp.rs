@@ -1,11 +1,12 @@
 use crate::interp::{InterpreterError, InterpreterErrorKind};
 use crate::parser::{Ast, BinOp};
+use std::collections::HashMap;
 
-pub struct Interpreter;
+pub struct Interpreter(HashMap<String, u64>);
 
 impl Interpreter {
     pub fn new() -> Self {
-        Interpreter
+        Interpreter(HashMap::new())
     }
 
     pub fn eval(&mut self, expr: &Ast) -> Result<u64, InterpreterError> {
@@ -21,6 +22,12 @@ impl Interpreter {
                 let r = self.eval(rhs)?;
                 self.eval_binop(op, l, r)
                     .map_err(|e| InterpreterError::new(e, expr.loc.clone()))
+            }
+            Bind { ref var, ref body } => {
+                // TODO: clean
+                let e = self.eval(body)?;
+                self.0.insert(var.clone(), e);
+                Ok(0)
             }
             _ => unreachable!(),
         }

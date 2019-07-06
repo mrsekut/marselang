@@ -4,6 +4,61 @@ use crate::parser::parser;
 use crate::util::Annot;
 
 #[derive(Debug, PartialEq)]
+pub enum AstKind {
+    Num(u64),
+    UniOp {
+        op: UniOp,
+        e: Box<Ast>,
+    },
+    BinOp {
+        op: BinOp,
+        lhs: Box<Ast>,
+        rhs: Box<Ast>,
+    },
+    Bind {
+        var: String,
+        body: Box<Ast>,
+    },
+}
+
+pub type Ast = Annot<AstKind>;
+
+impl Ast {
+    pub fn num(n: u64, loc: Loc) -> Self {
+        Self::new(AstKind::Num(n), loc)
+    }
+
+    pub fn uniop(op: UniOp, e: Ast, loc: Loc) -> Self {
+        Self::new(AstKind::UniOp { op, e: Box::new(e) }, loc)
+    }
+
+    pub fn binop(op: BinOp, lhs: Ast, rhs: Ast, loc: Loc) -> Self {
+        Self::new(
+            AstKind::BinOp {
+                op,
+                lhs: Box::new(lhs),
+                rhs: Box::new(rhs),
+            },
+            loc,
+        )
+    }
+
+    pub fn bind(var: String, body: Box<Ast>, loc: Loc) -> Self {
+        Self::new(AstKind::Bind { var, body }, loc)
+    }
+}
+
+use std::str::FromStr;
+impl FromStr for Ast {
+    type Err = Error;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let tokens = lexer(s)?;
+        let ast = parser(tokens)?;
+        Ok(ast)
+    }
+}
+
+#[derive(Debug, PartialEq)]
 pub enum UniOpKind {
     Plus,
     Minus,
@@ -42,52 +97,5 @@ impl BinOp {
     }
     pub fn div(loc: Loc) -> Self {
         Self::new(BinOpKind::Div, loc)
-    }
-}
-
-#[derive(Debug, PartialEq)]
-pub enum AstKind {
-    Num(u64),
-    UniOp {
-        op: UniOp,
-        e: Box<Ast>,
-    },
-    BinOp {
-        op: BinOp,
-        lhs: Box<Ast>,
-        rhs: Box<Ast>,
-    },
-}
-
-pub type Ast = Annot<AstKind>;
-
-impl Ast {
-    pub fn num(n: u64, loc: Loc) -> Self {
-        Self::new(AstKind::Num(n), loc)
-    }
-
-    pub fn uniop(op: UniOp, e: Ast, loc: Loc) -> Self {
-        Self::new(AstKind::UniOp { op, e: Box::new(e) }, loc)
-    }
-
-    pub fn binop(op: BinOp, lhs: Ast, rhs: Ast, loc: Loc) -> Self {
-        Self::new(
-            AstKind::BinOp {
-                op,
-                lhs: Box::new(lhs),
-                rhs: Box::new(rhs),
-            },
-            loc,
-        )
-    }
-}
-
-use std::str::FromStr;
-impl FromStr for Ast {
-    type Err = Error;
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let tokens = lexer(s)?;
-        let ast = parser(tokens)?;
-        Ok(ast)
     }
 }

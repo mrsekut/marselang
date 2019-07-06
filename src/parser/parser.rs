@@ -5,15 +5,43 @@ use std::iter::Peekable;
 
 pub fn parser(tokens: Vec<Token>) -> Result<Ast, ParserError> {
     let mut tokens = tokens.into_iter().peekable();
-    let ast = parse_expr(&mut tokens)?;
+    let ast = parse_stmt(&mut tokens)?;
     match tokens.next() {
         Some(tok) => Err(ParserError::RedundantExpression(tok)),
         None => Ok(ast),
     }
 }
 
+// stmt ::= expr
+fn parse_stmt<Tokens: Iterator<Item = Token>>(
+    tokens: &mut Peekable<Tokens>,
+) -> Result<Ast, ParserError> {
+    match tokens.peek().map(|tok| tok.value.clone()) {
+        Some(TokenKind::Var(s)) => {
+            let var = match tokens.next() {
+                Some(Token {
+                    value: TokenKind::Var(s),
+                    loc,
+                }) => (s, loc),
+                _ => unreachable!(),
+            };
+            match tokens.next() {
+                Some(Token {
+                    value: TokenKind::Bind,
+                    loc: _,
+                }) => (),
+                _ => unreachable!(),
+            };
+            let body = parse_expr(tokens)?;
+            let loc = var.1.merge(&body.loc);
+            Ok(Ast::bind(var.0, Box::new(body), loc))
+        }
+        _ => parse_expr(tokens),
+    }
+}
+
 // expr ::= term expr_loop
-// expr ::= ("+" | "-") expr_loop | ε
+// expr_loop ::= ("+" | "-") expr_loop | ε
 fn parse_expr<Tokens: Iterator<Item = Token>>(
     tokens: &mut Peekable<Tokens>,
 ) -> Result<Ast, ParserError> {
@@ -42,7 +70,7 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
 }
 
 // term ::= unnary term_loop
-// term ::= ("*" | "/") unnary term_loop | ε
+// term_loop ::= ("*" | "/") unnary term_loop | ε
 fn parse_term<Tokens: Iterator<Item = Token>>(
     tokens: &mut Peekable<Tokens>,
 ) -> Result<Ast, ParserError> {
@@ -70,6 +98,7 @@ fn parse_term<Tokens: Iterator<Item = Token>>(
     }
 }
 
+// unary ::= factor | ("+" | "-") factor
 fn parse_unary<Tokens: Iterator<Item = Token>>(
     tokens: &mut Peekable<Tokens>,
 ) -> Result<Ast, ParserError> {
@@ -164,7 +193,7 @@ fn test_binop_parser() {
 }
 
 #[test]
-fn test_uniop_jparser() {
+fn test_uniop_parser() {
     use crate::lexer::{Loc, Token};
 
     // "-2+(+3)"
@@ -185,6 +214,34 @@ fn test_uniop_jparser() {
             Ast::uniop(UniOp::minus(Loc(0, 1)), Ast::num(2, Loc(1, 2)), Loc(1, 2)),
             Ast::uniop(UniOp::plus(Loc(4, 5)), Ast::num(3, Loc(5, 6)), Loc(5, 6)),
             Loc(1, 6)
+        ))
+    );
+}
+
+#[test]
+fn test_bind_parser() {
+    use crate::lexer::{Loc, Token};
+
+    // "hoge := 40 + 2"
+    let ast = parser(vec![
+        Token::var("hoge", Loc(0, 4)),
+        Token::bind(Loc(5, 7)),
+        Token::number(40, Loc(8, 10)),
+        Token::plus(Loc(11, 12)),
+        Token::number(2, Loc(13, 14)),
+    ]);
+
+    assert_eq!(
+        ast,
+        Ok(Ast::bind(
+            "hoge".to_string(),
+            Box::new(Ast::binop(
+                BinOp::add(Loc(11, 12)),
+                Ast::num(40, Loc(8, 10)),
+                Ast::num(2, Loc(13, 14)),
+                Loc(8, 14)
+            )),
+            Loc(0, 14)
         ))
     );
 }
