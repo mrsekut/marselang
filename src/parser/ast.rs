@@ -19,6 +19,7 @@ pub enum AstKind {
         var: String,
         body: Box<Ast>,
     },
+    Var(String),
 }
 
 pub type Ast = Annot<AstKind>;
@@ -45,6 +46,10 @@ impl Ast {
 
     pub fn bind(var: String, body: Box<Ast>, loc: Loc) -> Self {
         Self::new(AstKind::Bind { var, body }, loc)
+    }
+
+    pub fn var(var: String, loc: Loc) -> Self {
+        Self::new(AstKind::Var(var), loc)
     }
 }
 

@@ -84,7 +84,6 @@ fn run_eval() {
                     continue;
                 }
             };
-            // println!("{:?}", ast);
             let n = match interp.eval(&ast) {
                 Ok(n) => n,
                 Err(e) => {

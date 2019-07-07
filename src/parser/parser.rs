@@ -12,6 +12,40 @@ pub fn parser(tokens: Vec<Token>) -> Result<Ast, ParserError> {
     }
 }
 
+// fn parse_stmt<Tokens: Iterator<Item = Token>>(
+//     tokens: &mut Peekable<Tokens>,
+// ) -> Result<Ast, ParserError> {
+//     match tokens.peek().map(|tok| tok.value.clone()) {
+//         Some(TokenKind::Var(s)) => {
+//             match tokens.next() {
+//                 match tokens.peek().map(|tok| tok.value.clone()){
+//                     Some(TokenKind::Bind) => {
+
+//                         Ok(Ast::bind(var.0, Box::new(body), loc));
+//                     }
+//                     _ => Ok(Ast::var(s, tok.loc)),
+//                 }
+//             };
+//             // match tokens.peek().map(|tok| tok.value.clone()) {
+//             //     Some(TokenKind::Bind) => {
+//             //         let var = match tokens.next() {
+//             //             Some(Token {
+//             //                 value: TokenKind::Var(s),
+//             //                 loc,
+//             //             }) => (s, loc),
+//             //             _ => unreachable!(),
+//             //         };
+//             //         let body = parse_expr(tokens)?;
+//             //         let loc = var.1.merge(&body.loc);
+//             //         return Ok(Ast::bind(var.0, Box::new(body), loc));
+//             //     }
+//                 // TokenKind::Var(s) => Ok(Ast::var(s, tok.loc)),
+//                 // _ => parse_factor(tokens),
+//         }
+//         _ => parse_expr(tokens),
+//     }
+// }
+
 // stmt ::= expr
 fn parse_stmt<Tokens: Iterator<Item = Token>>(
     tokens: &mut Peekable<Tokens>,
@@ -108,7 +142,7 @@ fn parse_unary<Tokens: Iterator<Item = Token>>(
                 Some(Token {
                     value: TokenKind::Plus,
                     loc,
-                }) => UniOp::plus(loc),
+                }) => UniOp::pus(loc),
                 Some(Token {
                     value: TokenKind::Minus,
                     loc,

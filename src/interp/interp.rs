@@ -29,6 +29,10 @@ impl Interpreter {
                 self.0.insert(var.clone(), e);
                 Ok(0)
             }
+            Var(ref s) => self.0.get(s).cloned().ok_or(InterpreterError::new(
+                InterpreterErrorKind::UnboundVariable(s.clone()),
+                expr.loc.clone(),
+            )),
             _ => unreachable!(),
         }
     }
