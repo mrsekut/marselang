@@ -3,10 +3,8 @@ use crate::parser::ast::{Ast, BinOp, UniOp};
 use crate::parser::error::ParserError;
 use itertools::multipeek;
 use std::iter::IntoIterator;
-use std::iter::Peekable;
 
 pub fn parser(tokens: Vec<Token>) -> Result<Ast, ParserError> {
-    // let mut tokens = tokens.into_iter().peekable();
     let mut tokens = multipeek(tokens.into_iter());
     let ast = parse_stmt(&mut tokens)?;
     match tokens.next() {
@@ -15,34 +13,6 @@ pub fn parser(tokens: Vec<Token>) -> Result<Ast, ParserError> {
     }
 }
 
-// // stmt ::= expr
-// fn parse_stmt<Tokens: Iterator<Item = Token>>(
-//     tokens: &mut Peekable<Tokens>,
-// ) -> Result<Ast, ParserError> {
-//     match tokens.peek().map(|tok| tok.value.clone()) {
-//         Some(TokenKind::Var(s)) => {
-//             let var = match tokens.next() {
-//                 Some(Token {
-//                     value: TokenKind::Var(s),
-//                     loc,
-//                 }) => (s, loc),
-//                 _ => unreachable!(),
-//             };
-//             match tokens.next() {
-//                 Some(Token {
-//                     value: TokenKind::Bind,
-//                     loc: _,
-//                 }) => (),
-//                 _ => unreachable!(),
-//             };
-//             let body = parse_expr(tokens)?;
-//             let loc = var.1.merge(&body.loc);
-//             Ok(Ast::bind(var.0, Box::new(body), loc))
-//         }
-//         _ => parse_expr(tokens),
-//     }
-// }
-
 use itertools::MultiPeek;
 
 // stmt ::= expr
@@ -50,25 +20,33 @@ fn parse_stmt<Tokens: Iterator<Item = Token>>(
     tokens: &mut MultiPeek<Tokens>,
 ) -> Result<Ast, ParserError> {
     match tokens.peek().map(|tok| tok.value.clone()) {
-        Some(TokenKind::Var(s)) => {
-            let var = match tokens.next() {
-                Some(Token {
-                    value: TokenKind::Var(s),
-                    loc,
-                }) => (s, loc),
-                _ => unreachable!(),
-            };
-            match tokens.next() {
-                Some(Token {
-                    value: TokenKind::Bind,
-                    loc: _,
-                }) => (),
-                _ => unreachable!(),
-            };
-            let body = parse_expr(tokens)?;
-            let loc = var.1.merge(&body.loc);
-            Ok(Ast::bind(var.0, Box::new(body), loc))
-        }
+        Some(TokenKind::Var(s)) => match tokens.peek().map(|tok| tok.value.clone()) {
+            Some(TokenKind::Bind) => {
+                println!("変数束縛");
+                let var = match tokens.next() {
+                    Some(Token {
+                        value: TokenKind::Var(s),
+                        loc,
+                    }) => (s, loc),
+                    _ => unreachable!(),
+                };
+                match tokens.next() {
+                    Some(Token {
+                        value: TokenKind::Bind,
+                        loc: _,
+                    }) => (),
+                    _ => unreachable!(),
+                };
+                let body = parse_expr(tokens)?;
+                let loc = var.1.merge(&body.loc);
+                Ok(Ast::bind(var.0, Box::new(body), loc))
+            }
+            _ => {
+                println!("変数呼び出し");
+                tokens.reset_peek();
+                return parse_factor(tokens);
+            }
+        },
         _ => parse_expr(tokens),
     }
 }
@@ -180,6 +158,7 @@ fn parse_unary<Tokens: Iterator<Item = Token>>(
 fn parse_factor<Tokens: Iterator<Item = Token>>(
     tokens: &mut MultiPeek<Tokens>,
 ) -> Result<Ast, ParserError> {
+    println!("in parse_factor");
     tokens
         .next()
         .ok_or(ParserError::Eof)
@@ -196,6 +175,7 @@ fn parse_factor<Tokens: Iterator<Item = Token>>(
                     _ => Err(ParserError::UnclosedOpenParen(tok)),
                 }
             }
+            TokenKind::Var(s) => Ok(Ast::var(s, tok.loc)),
             _ => Err(ParserError::NotExpression(tok)),
         })
 }
