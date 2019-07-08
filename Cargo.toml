@@ -5,3 +5,5 @@ authors = ["mrsekut <k.cloudspider@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+
+itertools = "0.8"

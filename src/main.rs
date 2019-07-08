@@ -104,3 +104,18 @@ fn main() {
     // run_parser();
     run_eval();
 }
+
+// use itertools::multipeek;
+// use itertools::MultiPeek;
+
+// // impl<T: Iterator> Copy for MultiPeek<T> {}
+// // impl<T> Copy for MultiPeek<T> where T: Iterator {}
+
+// fn main() {
+//     let it = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+//     let mut it = it.into_iter();
+//     for i in 1..5 {
+//         multipeek(it).peek().map(|a| println!("{}", a));
+//     }
+//     println!("{:?}", itertools::multipeek(it).peek());
+// }
