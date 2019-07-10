@@ -34,7 +34,6 @@ fn parse_stmt<Tokens: Iterator<Item = Token>>(
                     }) => (),
                     _ => unreachable!(),
                 };
-                // TODO:
                 let body = parse_expr(tokens)?;
                 let loc = var.1.merge(&body.loc);
                 Ok(Ast::bind(var.0, Box::new(body), loc))
@@ -73,6 +72,7 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
             }
             _ => return Ok(lhs),
         }
+        tokens.reset_peek();
     }
 }
 
@@ -81,7 +81,9 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
 fn parse_term<Tokens: Iterator<Item = Token>>(
     tokens: &mut MultiPeek<Tokens>,
 ) -> Result<Ast, ParserError> {
+    tokens.reset_peek();
     let mut lhs = parse_unary(tokens)?;
+    tokens.reset_peek();
     loop {
         match tokens.peek().map(|tok| tok.value.clone()) {
             Some(TokenKind::Asterisk) | Some(TokenKind::Slash) => {
@@ -102,6 +104,7 @@ fn parse_term<Tokens: Iterator<Item = Token>>(
             }
             _ => return Ok(lhs),
         }
+        tokens.reset_peek();
     }
 }
 
@@ -156,7 +159,7 @@ fn parse_factor<Tokens: Iterator<Item = Token>>(
 }
 
 #[test]
-fn test_binop_parser() {
+fn test_parse_binop_parens() {
     use crate::lexer::{Loc, Token};
 
     // "12 + (3 - 123) * 3 / 4",
@@ -201,7 +204,7 @@ fn test_binop_parser() {
 }
 
 #[test]
-fn test_uniop_parser() {
+fn test_parse_uniop() {
     use crate::lexer::{Loc, Token};
 
     // "-2+(+3)"
@@ -227,7 +230,7 @@ fn test_uniop_parser() {
 }
 
 #[test]
-fn test_bind_parser() {
+fn test_parse_bind() {
     use crate::lexer::{Loc, Token};
 
     // "hoge := 40 + 2"
@@ -255,7 +258,7 @@ fn test_bind_parser() {
 }
 
 #[test]
-fn test_bin0d_parser() {
+fn test_parse_var_var() {
     use crate::lexer::{Loc, Token};
 
     // "x + x"
@@ -272,6 +275,35 @@ fn test_bin0d_parser() {
             Ast::var("x".to_string(), Loc(0, 1)),
             Ast::var("x".to_string(), Loc(4, 5)),
             Loc(0, 5)
+        ))
+    );
+}
+
+#[test]
+fn test_parse_same_symbol() {
+    use crate::lexer::{Loc, Token};
+
+    // "1 + 2 + 3"
+    let ast = parser(vec![
+        Token::number(1, Loc(0, 1)),
+        Token::plus(Loc(2, 3)),
+        Token::number(2, Loc(4, 5)),
+        Token::plus(Loc(6, 7)),
+        Token::number(3, Loc(8, 9)),
+    ]);
+
+    assert_eq!(
+        ast,
+        Ok(Ast::binop(
+            BinOp::add(Loc(6, 7)),
+            Ast::binop(
+                BinOp::add(Loc(2, 3)),
+                Ast::num(1, Loc(0, 1)),
+                Ast::num(2, Loc(4, 5)),
+                Loc(0, 5)
+            ),
+            Ast::num(3, Loc(8, 9)),
+            Loc(0, 9)
         ))
     );
 }

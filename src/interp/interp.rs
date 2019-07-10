@@ -169,30 +169,26 @@ fn test_eval_in_0() {
     assert_eq!(result, -3);
 }
 
-// #[test]
-// fn test_eval_in_var() {
-//     use crate::lexer::Loc;
-//     let mut interp = Interpreter::new();
-//     use crate::parser::{Ast, BinOp};
+#[test]
+fn test_eval_in_var() {
+    use crate::lexer::Loc;
+    let mut interp = Interpreter::new();
+    use crate::parser::Ast;
 
-//     // "hoge := 4\n hoge"
-//     let ast = Ast::binop(
-//         BinOp::sub(Loc(6, 7)),
-//         Ast::binop(
-//             BinOp::add(Loc(2, 3)),
-//             Ast::num(1, Loc(0, 1)),
-//             Ast::num(2, Loc(4, 5)),
-//             Loc(0, 5),
-//         ),
-//         Ast::binop(
-//             BinOp::mul(Loc(10, 11)),
-//             Ast::num(3, Loc(8, 9)),
-//             Ast::num(2, Loc(12, 13)),
-//             Loc(8, 13),
-//         ),
-//         Loc(0, 13),
-//     );
+    // "hoge := 4"
+    let ast = Ast::bind(
+        "hoge".to_string(),
+        Box::new(Ast::num(42, Loc(8, 10))),
+        Loc(0, 10),
+    );
 
-//     let result = interp.eval(&ast).unwrap();
-//     assert_eq!(result, 0);
-// }
+    // hoge
+    let call = Ast::var("hoge".to_string(), Loc(0, 4));
+
+    interp.eval(&ast).unwrap();
+    let r_call = match interp.eval(&call).unwrap() {
+        Value::Int(n) => n,
+        Value::Void => unreachable!(),
+    };
+    assert_eq!(r_call, 42);
+}
