@@ -5,7 +5,7 @@ use crate::util::Annot;
 
 #[derive(Debug, PartialEq)]
 pub enum AstKind {
-    Num(u64),
+    Num(i32),
     UniOp {
         op: UniOp,
         e: Box<Ast>,
@@ -25,7 +25,7 @@ pub enum AstKind {
 pub type Ast = Annot<AstKind>;
 
 impl Ast {
-    pub fn num(n: u64, loc: Loc) -> Self {
+    pub fn num(n: i32, loc: Loc) -> Self {
         Self::new(AstKind::Num(n), loc)
     }
 

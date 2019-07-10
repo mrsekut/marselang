@@ -4,7 +4,7 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum TokenKind {
-    Number(u64), // 0..9
+    Number(i32), // 0..9
     Plus,        // +
     Minus,       // -
     Asterisk,    // *
@@ -35,7 +35,7 @@ impl fmt::Display for TokenKind {
 pub type Token = Annot<TokenKind>;
 
 impl Token {
-    pub fn number(n: u64, loc: Loc) -> Self {
+    pub fn number(n: i32, loc: Loc) -> Self {
         Self::new(TokenKind::Number(n), loc)
     }
 
