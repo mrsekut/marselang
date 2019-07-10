@@ -1,5 +1,5 @@
 use crate::interp::{InterpreterError, InterpreterErrorKind};
-use crate::parser::{Ast, BinOp};
+use crate::parser::{Ast, BinOp, UniOp};
 use std::collections::HashMap;
 
 pub struct Interpreter(HashMap<String, i32>);
@@ -13,6 +13,10 @@ impl Interpreter {
         use crate::parser::AstKind::*;
         match expr.value {
             Num(n) => Ok(n),
+            UniOp { ref op, ref e } => {
+                let e = self.eval(e)?;
+                Ok(self.eval_uniop(op, e))
+            }
             BinOp {
                 ref op,
                 ref lhs,
@@ -34,6 +38,14 @@ impl Interpreter {
                 expr.loc.clone(),
             )),
             _ => unreachable!(),
+        }
+    }
+
+    fn eval_uniop(&mut self, op: &UniOp, n: i32) -> i32 {
+        use crate::parser::UniOpKind::*;
+        match op.value {
+            Plus => n,
+            Minus => -n,
         }
     }
 
@@ -72,23 +84,23 @@ fn test_eval() {
     assert_eq!(result, 3);
 }
 
-// #[test]
-// fn test_eval_neg() {
-//     use crate::lexer::Loc;
-//     let mut interp = Interpreter::new();
-//     use crate::parser::{Ast, BinOp, UniOp};
+#[test]
+fn test_eval_in_paren() {
+    use crate::lexer::Loc;
+    let mut interp = Interpreter::new();
+    use crate::parser::{Ast, BinOp, UniOp};
 
-//     // "2 + (-1)"
-//     let ast = Ast::binop(
-//         BinOp::add(Loc(2, 3)),
-//         Ast::num(2, Loc(0, 1)),
-//         Ast::uniop(UniOp::minus(Loc(5, 6)), Ast::num(1, Loc(6, 7)), Loc(6, 7)),
-//         Loc(0, 7),
-//     );
+    // "2 + (-1)"
+    let ast = Ast::binop(
+        BinOp::add(Loc(2, 3)),
+        Ast::num(2, Loc(0, 1)),
+        Ast::uniop(UniOp::minus(Loc(5, 6)), Ast::num(1, Loc(6, 7)), Loc(6, 7)),
+        Loc(0, 7),
+    );
 
-//     let result = interp.eval(&ast).unwrap();
-//     assert_eq!(result, 1);
-// }
+    let result = interp.eval(&ast).unwrap();
+    assert_eq!(result, 1);
+}
 
 #[test]
 fn test_eval_in_0() {

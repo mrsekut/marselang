@@ -101,6 +101,6 @@ fn run_eval() {
 
 fn main() {
     // run_lexer();
-    // run_parser();
-    run_eval();
+    run_parser();
+    // run_eval();
 }
