@@ -22,7 +22,6 @@ fn parse_stmt<Tokens: Iterator<Item = Token>>(
     match tokens.peek().map(|tok| tok.value.clone()) {
         Some(TokenKind::Var(s)) => match tokens.peek().map(|tok| tok.value.clone()) {
             Some(TokenKind::Bind) => {
-                println!("変数束縛");
                 let var = match tokens.next() {
                     Some(Token {
                         value: TokenKind::Var(s),
@@ -41,11 +40,7 @@ fn parse_stmt<Tokens: Iterator<Item = Token>>(
                 let loc = var.1.merge(&body.loc);
                 Ok(Ast::bind(var.0, Box::new(body), loc))
             }
-            _ => {
-                println!("変数呼び出し");
-                tokens.reset_peek();
-                return parse_factor(tokens);
-            }
+            _ => parse_expr(tokens),
         },
         _ => parse_expr(tokens),
     }
@@ -59,13 +54,9 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
     tokens.reset_peek();
     let mut lhs = parse_term(tokens)?;
     tokens.reset_peek();
-    // println!("expr: {:?}", tokens.peek());
-    // println!("expr2: {:?}", tokens.peek());
-    // println!("{:?}", tokens.peek().map(|tok| tok.value.clone()));
     loop {
         match tokens.peek().map(|tok| tok.value.clone()) {
             Some(TokenKind::Plus) | Some(TokenKind::Minus) => {
-                //         match tokens.peek().map(|tok| tok.value.clone()) {
                 println!("in parase_expr");
                 let op = match tokens.next() {
                     Some(Token {
@@ -78,16 +69,11 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
                     }) => BinOp::sub(loc),
                     _ => unreachable!(),
                 };
-
-                println!("iii");
                 let rhs = parse_term(tokens)?;
                 let loc = lhs.loc.merge(&rhs.loc);
                 lhs = Ast::binop(op, lhs, rhs, loc)
             }
-            _ => {
-                println!("ooo");
-                return Ok(lhs);
-            }
+            _ => return Ok(lhs),
         }
         tokens.reset_peek();
     }
@@ -166,6 +152,7 @@ fn parse_factor<Tokens: Iterator<Item = Token>>(
             TokenKind::Number(n) => Ok(Ast::num(n, tok.loc)),
             TokenKind::Lparen => {
                 let e = parse_expr(tokens)?;
+                println!("in parse_factor lparen");
                 match tokens.next() {
                     Some(Token {
                         value: TokenKind::Rparen,
@@ -175,7 +162,10 @@ fn parse_factor<Tokens: Iterator<Item = Token>>(
                     _ => Err(ParserError::UnclosedOpenParen(tok)),
                 }
             }
-            TokenKind::Var(s) => Ok(Ast::var(s, tok.loc)),
+            TokenKind::Var(s) => {
+                println!("in parse_factor var");
+                Ok(Ast::var(s, tok.loc))
+            }
             _ => Err(ParserError::NotExpression(tok)),
         })
 }
