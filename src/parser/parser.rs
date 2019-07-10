@@ -1,7 +1,7 @@
 use crate::lexer::{Token, TokenKind};
 use crate::parser::ast::{Ast, BinOp, UniOp};
 use crate::parser::error::ParserError;
-use itertools::multipeek;
+use itertools::{multipeek, MultiPeek};
 use std::iter::IntoIterator;
 
 pub fn parser(tokens: Vec<Token>) -> Result<Ast, ParserError> {
@@ -13,14 +13,12 @@ pub fn parser(tokens: Vec<Token>) -> Result<Ast, ParserError> {
     }
 }
 
-use itertools::MultiPeek;
-
 // stmt ::= expr
 fn parse_stmt<Tokens: Iterator<Item = Token>>(
     tokens: &mut MultiPeek<Tokens>,
 ) -> Result<Ast, ParserError> {
     match tokens.peek().map(|tok| tok.value.clone()) {
-        Some(TokenKind::Var(s)) => match tokens.peek().map(|tok| tok.value.clone()) {
+        Some(TokenKind::Var(_)) => match tokens.peek().map(|tok| tok.value.clone()) {
             Some(TokenKind::Bind) => {
                 let var = match tokens.next() {
                     Some(Token {
@@ -36,6 +34,7 @@ fn parse_stmt<Tokens: Iterator<Item = Token>>(
                     }) => (),
                     _ => unreachable!(),
                 };
+                // TODO:
                 let body = parse_expr(tokens)?;
                 let loc = var.1.merge(&body.loc);
                 Ok(Ast::bind(var.0, Box::new(body), loc))
@@ -57,7 +56,6 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
     loop {
         match tokens.peek().map(|tok| tok.value.clone()) {
             Some(TokenKind::Plus) | Some(TokenKind::Minus) => {
-                println!("in parase_expr");
                 let op = match tokens.next() {
                     Some(Token {
                         value: TokenKind::Plus,
@@ -75,7 +73,6 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
             }
             _ => return Ok(lhs),
         }
-        tokens.reset_peek();
     }
 }
 
@@ -84,13 +81,7 @@ fn parse_expr<Tokens: Iterator<Item = Token>>(
 fn parse_term<Tokens: Iterator<Item = Token>>(
     tokens: &mut MultiPeek<Tokens>,
 ) -> Result<Ast, ParserError> {
-    tokens.reset_peek();
     let mut lhs = parse_unary(tokens)?;
-    tokens.reset_peek();
-    // println!("mul: {:?}", tokens.peek());
-    // println!("mul2: {:?}", tokens.peek());
-    // println!("mul3: {:?}", tokens.peek());
-    // println!("mul4: {:?}", tokens.peek());
     loop {
         match tokens.peek().map(|tok| tok.value.clone()) {
             Some(TokenKind::Asterisk) | Some(TokenKind::Slash) => {
@@ -111,7 +102,6 @@ fn parse_term<Tokens: Iterator<Item = Token>>(
             }
             _ => return Ok(lhs),
         }
-        tokens.reset_peek();
     }
 }
 
@@ -144,7 +134,6 @@ fn parse_unary<Tokens: Iterator<Item = Token>>(
 fn parse_factor<Tokens: Iterator<Item = Token>>(
     tokens: &mut MultiPeek<Tokens>,
 ) -> Result<Ast, ParserError> {
-    println!("in parse_factor");
     tokens
         .next()
         .ok_or(ParserError::Eof)
@@ -152,7 +141,6 @@ fn parse_factor<Tokens: Iterator<Item = Token>>(
             TokenKind::Number(n) => Ok(Ast::num(n, tok.loc)),
             TokenKind::Lparen => {
                 let e = parse_expr(tokens)?;
-                println!("in parse_factor lparen");
                 match tokens.next() {
                     Some(Token {
                         value: TokenKind::Rparen,
@@ -162,10 +150,7 @@ fn parse_factor<Tokens: Iterator<Item = Token>>(
                     _ => Err(ParserError::UnclosedOpenParen(tok)),
                 }
             }
-            TokenKind::Var(s) => {
-                println!("in parse_factor var");
-                Ok(Ast::var(s, tok.loc))
-            }
+            TokenKind::Var(s) => Ok(Ast::var(s, tok.loc)),
             _ => Err(ParserError::NotExpression(tok)),
         })
 }
@@ -265,6 +250,28 @@ fn test_bind_parser() {
                 Loc(8, 14)
             )),
             Loc(0, 14)
+        ))
+    );
+}
+
+#[test]
+fn test_bin0d_parser() {
+    use crate::lexer::{Loc, Token};
+
+    // "x + x"
+    let ast = parser(vec![
+        Token::var("x", Loc(0, 1)),
+        Token::plus(Loc(2, 3)),
+        Token::var("x", Loc(4, 5)),
+    ]);
+
+    assert_eq!(
+        ast,
+        Ok(Ast::binop(
+            BinOp::add(Loc(2, 3)),
+            Ast::var("x".to_string(), Loc(0, 1)),
+            Ast::var("x".to_string(), Loc(4, 5)),
+            Loc(0, 5)
         ))
     );
 }
