@@ -1,5 +1,5 @@
 [package]
-name = "marslang"
+name = "rytl"
 version = "0.1.0"
 authors = ["mrsekut <k.cloudspider@gmail.com>"]
 edition = "2018"

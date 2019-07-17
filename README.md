@@ -1,7 +1,7 @@
-# Mars lang (仮)
+# Rytl
 
 - mars lang is mrsekut's original toy programming language.
-- [scrapbox note](https://scrapbox.io/mrsekut-p/marslang)
+- [scrapbox note](https://scrapbox.io/mrsekut-p/rytl)
 
 ## Rust
 
